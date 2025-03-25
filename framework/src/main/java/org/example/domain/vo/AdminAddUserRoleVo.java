@@ -1,7 +1,5 @@
 package org.example.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -54,16 +52,20 @@ public class AdminAddUserRoleVo {
     /**
      * 创建者
      */
-    @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建者")
     private Long createBy;
 
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")
     private Date createTime;
+
+    /**
+     * 更新人
+     */
+    @Schema(description = "更新人")
+    private Date updateBy;
 
     /**
      * 备注

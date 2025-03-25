@@ -1,11 +1,13 @@
 package org.example.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.domain.entity.UserRole;
 import org.example.mapper.UserRoleMapper;
 import org.example.service.UserRoleService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,5 +28,16 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
             userRole.setRoleId(roleId);
             save(userRole);
         });
+    }
+
+    @Override
+    public List<Long> getRoleIdsByUserId(Long id) {
+        List<Long> list = new ArrayList<>();
+        LambdaQueryWrapper<UserRole> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserRole::getUserId, id);
+        for (UserRole userRole : list(queryWrapper)) {
+            list.add(userRole.getRoleId());
+        }
+        return list;
     }
 }

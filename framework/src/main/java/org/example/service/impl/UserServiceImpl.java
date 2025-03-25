@@ -7,14 +7,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddUserDto;
+import org.example.domain.dto.ChangeUserStatusDto;
+import org.example.domain.dto.UpdateUserDto;
 import org.example.domain.dto.UserListDto;
 import org.example.domain.entity.User;
-import org.example.domain.vo.AdminUserVo;
-import org.example.domain.vo.PageVo;
-import org.example.domain.vo.UserInfoVo;
+import org.example.domain.vo.*;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.exception.SystemException;
 import org.example.mapper.UserMapper;
+import org.example.service.RoleService;
 import org.example.service.UserRoleService;
 import org.example.service.UserService;
 import org.example.utils.BeanCopyUtils;
@@ -42,6 +43,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private UserRoleService userRoleService;
+
+    @Autowired
+    private RoleService roleService;
 
     /**
      * 获取用户信息
@@ -160,22 +164,72 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 删除用户
      *
-     * @param id 用户id
+     * @param ids 用户id
      * @return 删除结果
      */
     @Override
-    public ResponseResult deleteUser(Long id) {
-        if (id == SystemConstants.ADMIN_USER_ID) {
+    public ResponseResult deleteUser(List<Long> ids) {
+        for (Long id : ids) {
+            if (id == SystemConstants.ADMIN_USER_ID) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
+            }
+            if (Objects.isNull(getById(id))) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+            }
+            LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(User::getId, id)
+                    .set(User::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+            update(updateWrapper);
+            userRoleService.removeById(id);
+        }
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult getUserInfoById(Long id) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getId, id);
+        List<User> list = list(queryWrapper);
+        if (list.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        User user = list.get(0);
+        AdminAddUserVo userVo = BeanCopyUtils.copyBean(user, AdminAddUserVo.class);
+        List<Long> roleIds = userRoleService.getRoleIdsByUserId(id);
+        List<AdminAddUserRoleVo> roles = (List<AdminAddUserRoleVo>) roleService.listAllRole().getData();
+        return ResponseResult.okResult(new AdminAddUserResult(roleIds, roles, userVo));
+    }
+
+    @Override
+    public ResponseResult updateUser(UpdateUserDto user) {
+        if (user.getId() == SystemConstants.ADMIN_USER_ID) {
             return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
         }
-        if (Objects.isNull(getById(id))) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getId, user.getId());
+        List<User> list = list(queryWrapper);
+        if (list.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        User newUser = BeanCopyUtils.copyBean(user, User.class);
+        updateById(newUser);
+        userRoleService.removeById(user.getId());
+        userRoleService.add(user.getId(), user.getRoleIds());
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult changeStatus(ChangeUserStatusDto changeUserStatusDto) {
+        if (changeUserStatusDto.getUserId() == SystemConstants.ADMIN_USER_ID) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
+        }
+        if (getById(changeUserStatusDto.getUserId()) == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
         }
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(User::getId, id)
-                .set(User::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+        updateWrapper.eq(User::getId, changeUserStatusDto.getUserId())
+                .set(User::getStatus, changeUserStatusDto.getStatus());
         update(updateWrapper);
-        userRoleService.removeById(id);
         return ResponseResult.okResult();
     }
 
