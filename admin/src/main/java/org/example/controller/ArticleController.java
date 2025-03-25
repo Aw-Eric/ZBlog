@@ -8,11 +8,11 @@ import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddArticleDto;
 import org.example.domain.dto.ArticleListDto;
 import org.example.domain.dto.UpdateArticleDto;
-import org.example.domain.entity.Article;
 import org.example.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/content/article")
@@ -61,7 +61,7 @@ public class ArticleController {
     @SystemLog(businessName = "删除文章")
     @Operation(summary = "删除文章", description = "删除文章")
     public ResponseResult delete(
-            @Parameter(description = "文章ID", required = true) @PathVariable Long id) {
+            @Parameter(description = "文章ID", required = true) @PathVariable List<Long> id) {
         return articleService.deleteArticle(id);
     }
 }

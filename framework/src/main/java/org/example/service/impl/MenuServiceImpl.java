@@ -130,6 +130,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         return ResponseResult.okResult();
     }
 
+    /**
+     * 删除菜单
+     *
+     * @param menuId 菜单id
+     * @return 删除结果
+     */
     @Override
     public ResponseResult deleteMenu(Long menuId) {
         Menu menu = getById(menuId);

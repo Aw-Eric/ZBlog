@@ -7,6 +7,8 @@ import org.example.domain.dto.ArticleListDto;
 import org.example.domain.dto.UpdateArticleDto;
 import org.example.domain.entity.Article;
 
+import java.util.List;
+
 public interface ArticleService extends IService<Article> {
     ResponseResult hotArticleList();
 
@@ -24,5 +26,5 @@ public interface ArticleService extends IService<Article> {
 
     ResponseResult updateArticle(UpdateArticleDto updateArticleDto);
 
-    ResponseResult deleteArticle(Long id);
+    ResponseResult deleteArticle(List<Long> id);
 }

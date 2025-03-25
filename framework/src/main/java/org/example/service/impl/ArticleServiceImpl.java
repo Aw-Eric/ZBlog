@@ -11,7 +11,6 @@ import org.example.domain.dto.ArticleListDto;
 import org.example.domain.dto.UpdateArticleDto;
 import org.example.domain.entity.Article;
 import org.example.domain.entity.ArticleTag;
-import org.example.domain.entity.Tag;
 import org.example.domain.vo.*;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.mapper.ArticleMapper;
@@ -244,13 +243,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * @return 删除结果
      */
     @Override
-    public ResponseResult deleteArticle(Long id) {
-        if (Objects.isNull(id)) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.ARTICLE_NOT_FOUND);
+    public ResponseResult deleteArticle(List<Long> id) {
+        for (Long articleId : id) {
+            if (Objects.isNull(getById(articleId))) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.ARTICLE_NOT_FOUND);
+            }
+            LambdaUpdateWrapper<Article> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Article::getId, articleId).set(Article::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+            update(updateWrapper);
         }
-        LambdaUpdateWrapper<Article> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(Article::getId, id).set(Article::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
-        update(updateWrapper);
         return ResponseResult.okResult();
     }
 }

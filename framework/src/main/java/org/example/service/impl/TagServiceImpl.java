@@ -86,8 +86,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
             }
             else {
-                Tag tag = getById(id);
-                tag.setDelFlag(SystemConstants.DEL_FLAG_TRUE);
+//                Tag tag = getById(id);
+//                tag.setDelFlag(SystemConstants.DEL_FLAG_TRUE);
                 LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
                 updateWrapper.eq(Tag::getId, id).set(Tag::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
                 update(updateWrapper);
