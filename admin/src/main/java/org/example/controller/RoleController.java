@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.annotation.SystemLog;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddRoleDto;
 import org.example.domain.dto.ChangeStatusDto;
 import org.example.domain.dto.RoleListDto;
 import org.example.service.RoleService;
@@ -36,5 +37,13 @@ public class RoleController {
     public ResponseResult changeStatus(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "修改角色启用信息") @RequestBody ChangeStatusDto changeStatusDto) {
         return roleService.changeStatus(changeStatusDto);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增角色")
+    @Tag(name = "角色", description = "新增角色")
+    public ResponseResult addRole(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "角色信息") @RequestBody AddRoleDto addRoleDto) {
+        return roleService.add(addRoleDto);
     }
 }

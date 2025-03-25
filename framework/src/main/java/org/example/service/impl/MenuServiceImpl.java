@@ -7,6 +7,7 @@ import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddMenuDto;
 import org.example.domain.entity.Menu;
+import org.example.domain.vo.AdminAddRoleMenuVo;
 import org.example.domain.vo.AdminMenuVo;
 import org.example.domain.vo.MenuVo;
 import org.example.enums.AppHttpCodeEnum;
@@ -151,7 +152,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     public ResponseResult treeSelect() {
-        return null;
+        List<Menu> menus = list(new LambdaQueryWrapper<Menu>().eq(Menu::getStatus, SystemConstants.STATUS_NORMAL));
+        List<AdminAddRoleMenuVo> menuVos = BeanCopyUtils.copyBeanList(menus, AdminAddRoleMenuVo.class);
+        for (AdminAddRoleMenuVo menuVo : menuVos) {
+            menuVo.setLabel(getById(menuVo.getId()).getMenuName());
+        }
+        return ResponseResult.okResult(builderMenuTrees(menuVos, 0L));
     }
 
     /**
@@ -178,6 +184,36 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         List<MenuVo> childrenList = menus.stream()
                 .filter(m -> m.getParentId().equals(menu.getId()))
                 .map(m -> m.setChildren(getChildren(m, menus)))
+                .toList();
+        return childrenList;
+    }
+
+    /**
+     * 构建菜单树
+     *
+     * @param menus    所有菜单
+     * @param parentId 父菜单id
+     * @return 菜单树
+     */
+    private List<AdminAddRoleMenuVo> builderMenuTrees(List<AdminAddRoleMenuVo> menus, Long parentId) {
+        List<AdminAddRoleMenuVo> menuTree = menus.stream()
+                .filter(menu -> menu.getParentId().equals(parentId))
+                .map(menu -> menu.setChildren(getChildrens(menu, menus)))
+                .toList();
+        return menuTree;
+    }
+
+    /**
+     * 获取存入参数的子Menu集合
+     *
+     * @param menu  父Menu
+     * @param menus 所有Menu
+     * @return 子Menu集合
+     */
+    private List<AdminAddRoleMenuVo> getChildrens(AdminAddRoleMenuVo menu, List<AdminAddRoleMenuVo> menus) {
+        List<AdminAddRoleMenuVo> childrenList = menus.stream()
+                .filter(m -> m.getParentId().equals(menu.getId()))
+                .map(m -> m.setChildren(getChildrens(m, menus)))
                 .toList();
         return childrenList;
     }

@@ -6,15 +6,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddRoleDto;
 import org.example.domain.dto.ChangeStatusDto;
 import org.example.domain.dto.RoleListDto;
 import org.example.domain.entity.Role;
+import org.example.domain.entity.RoleMenu;
 import org.example.domain.vo.AdminRoleVo;
 import org.example.domain.vo.PageVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.mapper.RoleMapper;
+import org.example.mapper.RoleMenuMapper;
 import org.example.service.RoleService;
 import org.example.utils.BeanCopyUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -31,6 +35,8 @@ import java.util.Objects;
 @Service("roleService")
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements RoleService {
 
+    @Autowired
+    RoleMenuMapper roleMenuMapper;
 
     /**
      * 根据用户id查询角色权限
@@ -80,6 +86,34 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         updateWrapper.eq(Role::getId, changeStatusDto.getRoleId())
                 .set(Role::getStatus, changeStatusDto.getStatus());
         update(updateWrapper);
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 新增角色
+     *
+     * @param addRoleDto 新增角色信息
+     * @return 结果
+     */
+    @Override
+    public ResponseResult add(AddRoleDto addRoleDto) {
+        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(addRoleDto.getRoleName())) {
+            queryWrapper.eq(Role::getRoleName, addRoleDto.getRoleName());
+        }
+        if (count(queryWrapper) > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_EXIST);
+        }
+        List<RoleMenu> roleMenus = new ArrayList<>();
+        for (Long menuId : addRoleDto.getMenuIds()) {
+            RoleMenu roleMenu = new RoleMenu();
+            roleMenu.setRoleId(menuId);
+            roleMenu.setMenuId(menuId);
+            roleMenus.add(roleMenu);
+        }
+        roleMenuMapper.insert(roleMenus);
+        Role role = BeanCopyUtils.copyBean(addRoleDto, Role.class);
+        save(role);
         return ResponseResult.okResult();
     }
 }
