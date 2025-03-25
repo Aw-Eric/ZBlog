@@ -1,8 +1,13 @@
 package org.example.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.UserListDto;
+import org.example.domain.entity.User;
+import org.example.domain.vo.AdminUserVo;
+import org.example.domain.vo.PageVo;
 import org.example.domain.vo.UserInfoVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.exception.SystemException;
@@ -13,9 +18,9 @@ import org.example.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.example.domain.entity.User;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Objects;
 
 
@@ -88,6 +93,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 存入数据库
         save(user);
         return ResponseResult.okResult();
+    }
+
+    /**
+     * 分页查询用户列表
+     *
+     * @param pageNum     页码
+     * @param pageSize    页面大小
+     * @param userListDto 查询条件
+     * @return 用户列表
+     */
+    @Override
+    public ResponseResult pageList(Integer pageNum, Integer pageSize, UserListDto userListDto) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(Objects.nonNull(userListDto.getUserName()), User::getUserName, userListDto.getUserName())
+                .like(Objects.nonNull(userListDto.getPhonenumber()), User::getPhonenumber, userListDto.getPhonenumber())
+                .eq(Objects.nonNull(userListDto.getStatus()), User::getStatus, userListDto.getStatus());
+        Page<User> page = new Page<>(pageNum, pageSize);
+        page(page, queryWrapper);
+        List<AdminUserVo> adminUserVos = BeanCopyUtils.copyBeanList(page.getRecords(), AdminUserVo.class);
+        return ResponseResult.okResult(new PageVo(adminUserVos, page.getTotal()));
     }
 
     private boolean EmailExist(String email) {
