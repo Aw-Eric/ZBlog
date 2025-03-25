@@ -4,12 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.example.annotation.SystemLog;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddUserDto;
 import org.example.domain.dto.UserListDto;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/system/user")
@@ -26,5 +25,13 @@ public class UserController {
             @Parameter(description = "每页数量", required = true) Integer pageSize,
             @Parameter(description = "用户名") UserListDto userListDto) {
         return userService.pageList(pageNum, pageSize, userListDto);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增用户")
+    @Operation(summary = "新增用户", description = "新增用户")
+    public ResponseResult add(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "添加用户dto") @RequestBody AddUserDto addUserDto) {
+        return userService.add(addUserDto);
     }
 }

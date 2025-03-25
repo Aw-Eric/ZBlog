@@ -12,6 +12,7 @@ import org.example.domain.dto.RoleListDto;
 import org.example.domain.dto.UpdateRoleDto;
 import org.example.domain.entity.Role;
 import org.example.domain.entity.RoleMenu;
+import org.example.domain.vo.AdminAddUserRoleVo;
 import org.example.domain.vo.AdminRoleVo;
 import org.example.domain.vo.AdminUpdateRoleVo;
 import org.example.domain.vo.PageVo;
@@ -202,5 +203,19 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             roleMenuMapper.delete(roleMenuQueryWrapper);
         }
         return ResponseResult.okResult();
+    }
+
+    /**
+     * 获取用户角色列表
+     *
+     * @return 用户角色列表
+     */
+    @Override
+    public ResponseResult listAllRole() {
+        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Role::getStatus, SystemConstants.STATUS_NORMAL);
+        List<Role> roles = list(queryWrapper);
+        List<AdminAddUserRoleVo> adminAddUserRoleVos = BeanCopyUtils.copyBeanList(roles, AdminAddUserRoleVo.class);
+        return ResponseResult.okResult(adminAddUserRoleVos);
     }
 }

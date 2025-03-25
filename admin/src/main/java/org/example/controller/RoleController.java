@@ -73,4 +73,11 @@ public class RoleController {
             @Parameter(description = "角色id") @PathVariable List<Long> id) {
         return roleService.deleteRole(id);
     }
+
+    @GetMapping("/listAllRole")
+    @SystemLog(businessName = "用户角色列表")
+    @Operation(summary = "用户角色列表", description = "获取用户角色列表")
+    public ResponseResult listAllRole() {
+        return roleService.listAllRole();
+    }
 }

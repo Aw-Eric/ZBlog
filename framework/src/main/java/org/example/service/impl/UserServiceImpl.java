@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddUserDto;
 import org.example.domain.dto.UserListDto;
 import org.example.domain.entity.User;
 import org.example.domain.vo.AdminUserVo;
@@ -12,6 +13,7 @@ import org.example.domain.vo.UserInfoVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.exception.SystemException;
 import org.example.mapper.UserMapper;
+import org.example.service.UserRoleService;
 import org.example.service.UserService;
 import org.example.utils.BeanCopyUtils;
 import org.example.utils.SecurityUtils;
@@ -35,6 +37,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRoleService userRoleService;
 
     /**
      * 获取用户信息
@@ -113,6 +118,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         page(page, queryWrapper);
         List<AdminUserVo> adminUserVos = BeanCopyUtils.copyBeanList(page.getRecords(), AdminUserVo.class);
         return ResponseResult.okResult(new PageVo(adminUserVos, page.getTotal()));
+    }
+
+    @Override
+    public ResponseResult add(AddUserDto addUserDto) {
+        // 对数据进行非空判断
+        if (!StringUtils.hasText(addUserDto.getUserName())) {
+            throw new SystemException(AppHttpCodeEnum.USERNAME_NOT_NULL);
+        }
+        if (!StringUtils.hasText(addUserDto.getPassword())) {
+            throw new SystemException(AppHttpCodeEnum.PASSWORD_NOT_NULL);
+        }
+        if (!StringUtils.hasText(addUserDto.getNickName())) {
+            throw new SystemException(AppHttpCodeEnum.NICKNAME_NOT_NULL);
+        }
+        if (!StringUtils.hasText(addUserDto.getEmail())) {
+            throw new SystemException(AppHttpCodeEnum.EMAIL_NOT_NULL);
+        }
+        // 对数据进行是否存在的判断
+        if (UsernameExist(addUserDto.getUserName())) {
+            throw new SystemException(AppHttpCodeEnum.USERNAME_EXIST);
+        }
+        if (NickNameExist(addUserDto.getNickName())) {
+            throw new SystemException(AppHttpCodeEnum.NICKNAME_EXIST);
+        }
+        if (EmailExist(addUserDto.getEmail())) {
+            throw new SystemException(AppHttpCodeEnum.EMAIL_EXIST);
+        }
+        // 对密码进行加密
+        String encodePassword = passwordEncoder.encode(addUserDto.getPassword());
+        User user = BeanCopyUtils.copyBean(addUserDto, User.class);
+        user.setPassword(encodePassword);
+        // 存入数据库
+        save(user);
+        userRoleService.add(user.getId(), addUserDto.getRoleIds());
+        return ResponseResult.okResult();
     }
 
     private boolean EmailExist(String email) {
