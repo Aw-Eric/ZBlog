@@ -9,9 +9,11 @@ import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddRoleDto;
 import org.example.domain.dto.ChangeStatusDto;
 import org.example.domain.dto.RoleListDto;
+import org.example.domain.dto.UpdateRoleDto;
 import org.example.domain.entity.Role;
 import org.example.domain.entity.RoleMenu;
 import org.example.domain.vo.AdminRoleVo;
+import org.example.domain.vo.AdminUpdateRoleVo;
 import org.example.domain.vo.PageVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.mapper.RoleMapper;
@@ -105,15 +107,100 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             return ResponseResult.errorResult(AppHttpCodeEnum.DATA_EXIST);
         }
         List<RoleMenu> roleMenus = new ArrayList<>();
+        Role role = BeanCopyUtils.copyBean(addRoleDto, Role.class);
+        save(role);
+        // 搜索角色信息，查询id
+        LambdaQueryWrapper<Role> roleQueryWrapper = new LambdaQueryWrapper<>();
+        roleQueryWrapper.eq(Role::getRoleName, addRoleDto.getRoleName());
+        roleQueryWrapper.eq(Role::getRoleKey, addRoleDto.getRoleKey());
+        roleQueryWrapper.eq(Role::getRoleSort, addRoleDto.getRoleSort());
+        List<Role> list = list(roleQueryWrapper);
+        Long roleId = -1L;
+        if (list.size() == 1) {
+            roleId = list.get(0).getId();
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_EXIST);
+        }
         for (Long menuId : addRoleDto.getMenuIds()) {
             RoleMenu roleMenu = new RoleMenu();
-            roleMenu.setRoleId(menuId);
+            roleMenu.setRoleId(roleId);
             roleMenu.setMenuId(menuId);
             roleMenus.add(roleMenu);
         }
         roleMenuMapper.insert(roleMenus);
-        Role role = BeanCopyUtils.copyBean(addRoleDto, Role.class);
-        save(role);
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 根据id查询角色信息
+     *
+     * @param id 角色id
+     * @return 角色信息
+     */
+    @Override
+    public ResponseResult getRoleById(Long id) {
+        if (Objects.isNull(getById(id))) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Role::getId, id);
+        List<Role> list = list(queryWrapper);
+        AdminUpdateRoleVo adminUpdateRoleVo = BeanCopyUtils.copyBean(list.get(0), AdminUpdateRoleVo.class);
+        return ResponseResult.okResult(adminUpdateRoleVo);
+    }
+
+    /**
+     * 修改角色信息
+     *
+     * @param updateRoleDto 修改角色信息
+     * @return 结果
+     */
+    @Override
+    public ResponseResult updateRole(UpdateRoleDto updateRoleDto) {
+        if (updateRoleDto.getId() == SystemConstants.ADMIN_USER_ID) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
+        }
+        if (Objects.isNull(getById(updateRoleDto.getId()))) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        List<RoleMenu> roleMenus = new ArrayList<>();
+        Role role = BeanCopyUtils.copyBean(updateRoleDto, Role.class);
+        updateById(role);
+        LambdaQueryWrapper<RoleMenu> roleMenuQueryWrapper = new LambdaQueryWrapper<>();
+        roleMenuQueryWrapper.eq(RoleMenu::getRoleId, updateRoleDto.getId());
+        roleMenuMapper.delete(roleMenuQueryWrapper);
+        for (Long menuId : updateRoleDto.getMenuIds()) {
+            RoleMenu roleMenu = new RoleMenu();
+            roleMenu.setRoleId(updateRoleDto.getId());
+            roleMenu.setMenuId(menuId);
+            roleMenus.add(roleMenu);
+        }
+        roleMenuMapper.insert(roleMenus);
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 删除角色
+     *
+     * @param ids 角色id
+     * @return 结果
+     */
+    @Override
+    public ResponseResult deleteRole(List<Long> ids) {
+        for (Long id : ids) {
+            if (id == SystemConstants.ADMIN_USER_ID) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
+            }
+            if (Objects.isNull(getById(id))) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+            }
+            LambdaUpdateWrapper<Role> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Role::getId, id).set(Role::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+            update(updateWrapper);
+            LambdaQueryWrapper<RoleMenu> roleMenuQueryWrapper = new LambdaQueryWrapper<>();
+            roleMenuQueryWrapper.eq(RoleMenu::getRoleId, id);
+            roleMenuMapper.delete(roleMenuQueryWrapper);
+        }
         return ResponseResult.okResult();
     }
 }

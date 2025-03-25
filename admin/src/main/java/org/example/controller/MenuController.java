@@ -66,4 +66,12 @@ public class MenuController {
         return menuService.treeSelect();
     }
 
+    @GetMapping("/roleMenuTreeselect/{id}")
+    @SystemLog(businessName = "角色菜单树")
+    @Tag(name = "菜单", description = "角色菜单树")
+    public ResponseResult roleMenuTreeselect(
+            @Parameter(description = "角色id") @PathVariable Long id) {
+        return menuService.roleMenuTreeSelect(id);
+    }
+
 }

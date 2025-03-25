@@ -8,9 +8,12 @@ import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddRoleDto;
 import org.example.domain.dto.ChangeStatusDto;
 import org.example.domain.dto.RoleListDto;
+import org.example.domain.dto.UpdateRoleDto;
 import org.example.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/system/role")
@@ -45,5 +48,29 @@ public class RoleController {
     public ResponseResult addRole(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "角色信息") @RequestBody AddRoleDto addRoleDto) {
         return roleService.add(addRoleDto);
+    }
+
+    @GetMapping("/{id}")
+    @SystemLog(businessName = "根据id查询角色")
+    @Tag(name = "角色", description = "根据id查询角色")
+    public ResponseResult getRoleById(
+            @Parameter(description = "角色id") @PathVariable Long id) {
+        return roleService.getRoleById(id);
+    }
+
+    @PutMapping
+    @SystemLog(businessName = "修改角色")
+    @Tag(name = "角色", description = "修改角色")
+    public ResponseResult updateRole(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "角色信息") @RequestBody UpdateRoleDto updateRoleDto) {
+        return roleService.updateRole(updateRoleDto);
+    }
+
+    @DeleteMapping("/{id}")
+    @SystemLog(businessName = "删除角色")
+    @Tag(name = "角色", description = "删除角色")
+    public ResponseResult deleteRole(
+            @Parameter(description = "角色id") @PathVariable List<Long> id) {
+        return roleService.deleteRole(id);
     }
 }

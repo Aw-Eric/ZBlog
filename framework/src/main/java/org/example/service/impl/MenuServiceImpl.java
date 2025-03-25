@@ -7,11 +7,14 @@ import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddMenuDto;
 import org.example.domain.entity.Menu;
+import org.example.domain.entity.RoleMenu;
 import org.example.domain.vo.AdminAddRoleMenuVo;
 import org.example.domain.vo.AdminMenuVo;
 import org.example.domain.vo.MenuVo;
+import org.example.domain.vo.TreeSelectVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.mapper.MenuMapper;
+import org.example.mapper.RoleMenuMapper;
 import org.example.service.MenuService;
 import org.example.utils.BeanCopyUtils;
 import org.example.utils.SecurityUtils;
@@ -33,6 +36,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
     @Autowired
     private MenuMapper menuMapper;
+
+    @Autowired
+    private RoleMenuMapper roleMenuMapper;
 
     @Override
     public List<String> selectPermsByUserId(Long id) {
@@ -167,6 +173,29 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     }
 
     /**
+     * 获取角色菜单树
+     *
+     * @param id 角色id
+     * @return 角色菜单树
+     */
+    @Override
+    public ResponseResult roleMenuTreeSelect(Long id) {
+        List<AdminAddRoleMenuVo> trees =
+                builderMenuTrees(BeanCopyUtils.copyBeanList(list(), AdminAddRoleMenuVo.class), 0L);
+        for (AdminAddRoleMenuVo tree : trees) {
+            tree.setLabel(getById(tree.getId()).getMenuName());
+        }
+        LambdaQueryWrapper<RoleMenu> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RoleMenu::getRoleId, id);
+        List<RoleMenu> roleMenus = roleMenuMapper.selectList(queryWrapper);
+        List<Long> checkedKeys = roleMenus.stream()
+                .map(RoleMenu::getMenuId)
+                .toList();
+        TreeSelectVo treeSelectVo = new TreeSelectVo(trees, checkedKeys);
+        return ResponseResult.okResult(treeSelectVo);
+    }
+
+    /**
      * 构建菜单树
      * @param menus 所有菜单
      * @param parentId 父菜单id
@@ -206,6 +235,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
                 .filter(menu -> menu.getParentId().equals(parentId))
                 .map(menu -> menu.setChildren(getChildrens(menu, menus)))
                 .toList();
+        for (AdminAddRoleMenuVo menuVo : menuTree) {
+            menuVo.setLabel(getById(menuVo.getId()).getMenuName());
+        }
         return menuTree;
     }
 
@@ -221,6 +253,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
                 .filter(m -> m.getParentId().equals(menu.getId()))
                 .map(m -> m.setChildren(getChildrens(m, menus)))
                 .toList();
+        for (AdminAddRoleMenuVo tree : childrenList) {
+            tree.setLabel(getById(tree.getId()).getMenuName());
+        }
         return childrenList;
     }
 }
