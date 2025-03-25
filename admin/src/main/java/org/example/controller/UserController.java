@@ -34,4 +34,12 @@ public class UserController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "添加用户dto") @RequestBody AddUserDto addUserDto) {
         return userService.add(addUserDto);
     }
+
+    @DeleteMapping("/{id}")
+    @SystemLog(businessName = "删除用户")
+    @Operation(summary = "删除用户", description = "删除用户")
+    public ResponseResult deleteUser(
+            @PathVariable("id") @Parameter(description = "用户id", required = true) Long id) {
+        return userService.deleteUser(id);
+    }
 }

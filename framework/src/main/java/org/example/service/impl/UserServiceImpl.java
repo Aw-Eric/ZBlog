@@ -1,8 +1,10 @@
 package org.example.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
 import org.example.domain.dto.AddUserDto;
 import org.example.domain.dto.UserListDto;
@@ -152,6 +154,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 存入数据库
         save(user);
         userRoleService.add(user.getId(), addUserDto.getRoleIds());
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 删除用户
+     *
+     * @param id 用户id
+     * @return 删除结果
+     */
+    @Override
+    public ResponseResult deleteUser(Long id) {
+        if (id == SystemConstants.ADMIN_USER_ID) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CHANGE_STATUS_ILLEGAL);
+        }
+        if (Objects.isNull(getById(id))) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(User::getId, id)
+                .set(User::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+        update(updateWrapper);
+        userRoleService.removeById(id);
         return ResponseResult.okResult();
     }
 
