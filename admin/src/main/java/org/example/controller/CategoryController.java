@@ -1,10 +1,12 @@
 package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.annotation.SystemLog;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.CategoryListDto;
 import org.example.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,5 +34,15 @@ public class CategoryController {
     @Operation(summary = "导出分类", description = "导出分类为Excel")
     public void export(HttpServletResponse response) {
         categoryService.export(response);
+    }
+
+    @GetMapping("/list")
+    @SystemLog(businessName = "分类列表")
+    @Operation(summary = "分类列表", description = "获取分类列表")
+    public ResponseResult list(
+            @Parameter(description = "页码", required = true) Integer pageNum,
+            @Parameter(description = "每页数量", required = true) Integer pageSize,
+            @Parameter(description = "分类名称") CategoryListDto categoryListDto) {
+        return categoryService.pageList(pageNum, pageSize, categoryListDto);
     }
 }

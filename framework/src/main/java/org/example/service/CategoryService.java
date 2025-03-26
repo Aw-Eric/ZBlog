@@ -3,6 +3,7 @@ package org.example.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.CategoryListDto;
 import org.example.domain.entity.Category;
 
 
@@ -19,4 +20,6 @@ public interface CategoryService extends IService<Category> {
     ResponseResult listAllCategory();
 
     void export(HttpServletResponse response);
+
+    ResponseResult pageList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto);
 }

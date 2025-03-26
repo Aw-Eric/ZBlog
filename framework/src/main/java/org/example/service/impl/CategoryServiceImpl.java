@@ -3,15 +3,18 @@ package org.example.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.CategoryListDto;
 import org.example.domain.entity.Article;
 import org.example.domain.entity.Category;
 import org.example.domain.vo.AdminCategoryVo;
 import org.example.domain.vo.CategoryVo;
 import org.example.domain.vo.ExcelCategoryVo;
+import org.example.domain.vo.PageVo;
 import org.example.enums.AppHttpCodeEnum;
 import org.example.mapper.CategoryMapper;
 import org.example.service.ArticleService;
@@ -21,7 +24,6 @@ import org.example.utils.WebUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -96,5 +98,16 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
             WebUtils.renderString(response, JSON.toJSONString(result));
         }
 
+    }
+
+    @Override
+    public ResponseResult pageList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto) {
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(Objects.nonNull(categoryListDto.getName()), Category::getName, categoryListDto.getName())
+                .eq(Objects.nonNull(categoryListDto.getStatus()), Category::getStatus, categoryListDto.getStatus());
+        Page<Category> page = new Page<>(pageNum, pageSize);
+        page(page, queryWrapper);
+        List<AdminCategoryVo> adminCategoryVos = BeanCopyUtils.copyBeanList(page.getRecords(), AdminCategoryVo.class);
+        return ResponseResult.okResult(new PageVo(adminCategoryVos, page.getTotal()));
     }
 }

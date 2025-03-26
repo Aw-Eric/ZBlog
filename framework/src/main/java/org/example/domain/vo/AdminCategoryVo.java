@@ -28,4 +28,10 @@ public class AdminCategoryVo {
      */
     @Schema(description = "描述")
     private String description;
+
+    /**
+     * 状态
+     */
+    @Schema(description = "状态")
+    private String status;
 }
