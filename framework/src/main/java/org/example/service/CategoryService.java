@@ -3,8 +3,13 @@ package org.example.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddCategoryDto;
 import org.example.domain.dto.CategoryListDto;
+import org.example.domain.dto.ChangeCategoryStatusDto;
+import org.example.domain.dto.UpdateCategoryDto;
 import org.example.domain.entity.Category;
+
+import java.util.List;
 
 
 /**
@@ -22,4 +27,14 @@ public interface CategoryService extends IService<Category> {
     void export(HttpServletResponse response);
 
     ResponseResult pageList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto);
+
+    ResponseResult add(AddCategoryDto addCategoryDto);
+
+    ResponseResult updateCategory(UpdateCategoryDto updateCategoryDto);
+
+    ResponseResult deleteCategory(List<Long> id);
+
+    ResponseResult getCategoryById(Long id);
+
+    ResponseResult changeStatus(ChangeCategoryStatusDto changeCategoryStatusDto);
 }

@@ -3,12 +3,16 @@ package org.example.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.constants.SystemConstants;
 import org.example.domain.ResponseResult;
+import org.example.domain.dto.AddCategoryDto;
 import org.example.domain.dto.CategoryListDto;
+import org.example.domain.dto.ChangeCategoryStatusDto;
+import org.example.domain.dto.UpdateCategoryDto;
 import org.example.domain.entity.Article;
 import org.example.domain.entity.Category;
 import org.example.domain.vo.AdminCategoryVo;
@@ -109,5 +113,60 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
         page(page, queryWrapper);
         List<AdminCategoryVo> adminCategoryVos = BeanCopyUtils.copyBeanList(page.getRecords(), AdminCategoryVo.class);
         return ResponseResult.okResult(new PageVo(adminCategoryVos, page.getTotal()));
+    }
+
+    @Override
+    public ResponseResult add(AddCategoryDto addCategoryDto) {
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Category::getName, addCategoryDto.getName());
+        List<Category> list = list(queryWrapper);
+        if (!list.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_EXIST);
+        }
+        Category category = BeanCopyUtils.copyBean(addCategoryDto, Category.class);
+        save(category);
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult updateCategory(UpdateCategoryDto updateCategoryDto) {
+        Category category = BeanCopyUtils.copyBean(updateCategoryDto, Category.class);
+        updateById(category);
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult deleteCategory(List<Long> ids) {
+        for (Long id : ids) {
+            if (id == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+            }
+            LambdaUpdateWrapper<Category> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Category::getId, id).set(Category::getDelFlag, SystemConstants.DEL_FLAG_TRUE);
+            update(updateWrapper);
+        }
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    public ResponseResult getCategoryById(Long id) {
+        if (id == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        Category category = getById(id);
+        UpdateCategoryDto updateCategoryDto = BeanCopyUtils.copyBean(category, UpdateCategoryDto.class);
+        return ResponseResult.okResult(updateCategoryDto);
+    }
+
+    @Override
+    public ResponseResult changeStatus(ChangeCategoryStatusDto changeCategoryStatusDto) {
+        if (changeCategoryStatusDto.getId() == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST);
+        }
+        LambdaUpdateWrapper<Category> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Category::getId, changeCategoryStatusDto.getId())
+                .set(Category::getStatus, changeCategoryStatusDto.getStatus());
+        update(updateWrapper);
+        return ResponseResult.okResult();
     }
 }
