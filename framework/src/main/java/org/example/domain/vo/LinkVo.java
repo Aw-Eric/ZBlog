@@ -41,4 +41,6 @@ public class LinkVo {
     @Schema(description = "网站地址")
     private String address;
 
+    private String status;
+
 }
