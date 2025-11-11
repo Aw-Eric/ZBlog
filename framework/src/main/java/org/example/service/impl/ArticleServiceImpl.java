@@ -189,8 +189,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         List<AdminArticleListVo> vo = BeanCopyUtils.copyBeanList(page.getRecords(), AdminArticleListVo.class);
         PageVo pageVo = new PageVo(vo, page.getTotal());
         return ResponseResult.okResult(pageVo);
-
-
     }
 
     /**
