@@ -58,7 +58,7 @@ public class OssUploadServiceImpl implements UploadService {
         String key = filePath;
 
         try {
-//            byte[] uploadBytes = "hello qiniu cloud".getBytes("utf-8");
+//            byte[] uploadBytes = "hello qiNiu cloud".getBytes("utf-8");
 //            ByteArrayInputStream byteInputStream=new ByteArrayInputStream(uploadBytes);
 
             InputStream inputStream = imgFile.getInputStream();
